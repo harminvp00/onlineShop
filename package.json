@@ -1,0 +1,13 @@
+{
+  "name": "redux-product-listing",
+  "private": true,
+  "packageManager": "yarn@4.17.0",
+  "workspaces": [
+    "ui",
+    "server"
+  ],
+  "scripts": {
+    "dev": "yarn workspaces foreach -pt run dev",
+    "build": "yarn workspaces foreach -pt run build"
+  }
+}
