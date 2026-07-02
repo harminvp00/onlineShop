@@ -16,13 +16,14 @@
  * Every components read from this single place.
  */
 
-import { configureStore } from '@reduxjs/toolkit';
+import { configureStore } from "@reduxjs/toolkit";
+import productReducer from '../features/product/productSlice.ts'
 
 export const store = configureStore({
     reducer: {
-        
-    },
-});
+        product: productReducer,
+    }
+})
 
-export type RootState = ReturnType <typeof store.getState>;
+export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
