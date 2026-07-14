@@ -1,0 +1,166 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum OrderStatus {
+  PENDING
+  IN_PROCESS
+  DELIVERED
+  CANCELLED
+
+  @@map("order_status")
+}
+
+enum PaymentStatus {
+  PENDING
+  IN_PROCESS
+  COMPLETED
+  CANCELLED
+
+  @@map("payment_status")
+}
+
+model Customer {
+  id           Int      @id @default(autoincrement())
+  name         String
+  emailAddress String   @unique @map("email_address")
+  phoneNumber  String?  @map("phone_number") @db.Char(10)
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  addresses Address[]
+  orders    Order[]
+  cart      Cart?
+
+  @@map("customer")
+}
+
+model Category {
+  categoryId   Int      @id @default(autoincrement()) @map("category_id")
+  categoryName String   @unique @map("category_name")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  products Product[]
+
+  @@map("categories")
+}
+
+model Address {
+  id          Int     @id @default(autoincrement())
+  customerId  Int     @map("customer_id")
+  addressLine String  @map("address_line")
+  city        String
+  state       String
+  country     String  @default("INDIA")
+  addressType String  @map("address_type")
+  postalCode  String? @map("postal_code")
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  orders   Order[]
+
+  @@index([customerId])
+  @@map("addresses")
+}
+
+model Product {
+  productId          Int      @id @default(autoincrement()) @map("product_id")
+  imageUrl           String   @map("image_url")
+  productName        String   @map("product_name")
+  productDescription String   @map("product_description")
+  categoryId         Int      @map("category_id")
+  stock              Decimal  @db.Decimal(5, 0)
+  originalPrice      Decimal  @map("original_price") @db.Decimal(10, 2)
+  sellingPrice       Decimal? @map("selling_price") @db.Decimal(10, 2)
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  category   Category    @relation(fields: [categoryId], references: [categoryId], onDelete: Cascade)
+  orderItems OrderItem[]
+  cartItems  CartItem[]
+
+  @@index([categoryId])
+  @@map("products")
+}
+
+model Order {
+  orderId           Int         @id @default(autoincrement()) @map("order_id")
+  customerId        Int         @map("customer_id")
+  status            OrderStatus @default(PENDING)
+  shippingAddressId Int         @map("shipping_address_id")
+  totalAmount       Decimal     @map("total_amount") @db.Decimal(10, 2)
+
+  customer        Customer    @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  shippingAddress Address     @relation(fields: [shippingAddressId], references: [id], onDelete: Cascade)
+  orderItems      OrderItem[]
+  payments        Payment[]
+
+  @@index([customerId])
+  @@index([shippingAddressId])
+  @@map("orders")
+}
+
+model OrderItem {
+  orderId         Int     @map("order_id")
+  productId       Int     @map("product_id")
+  priceAtPurchase Decimal @map("price_at_purchase") @db.Decimal(10, 2)
+  quantity        Int
+
+  order   Order   @relation(fields: [orderId], references: [orderId], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [productId])
+
+  @@id([orderId, productId])
+  @@index([productId])
+  @@map("order_item")
+}
+
+model Payment {
+  paymentId        Int           @id @default(autoincrement()) @map("payment_id")
+  orderId          Int?          @map("order_id")
+  senderId         String        @map("sender_id")
+  amount           Decimal       @db.Decimal(10, 2)
+  gatewayId        String        @map("gateway_id")
+  gatewayOrderId   String        @map("gateway_order_id")
+  gatewayPaymentId String        @map("gateway_payment_id")
+  signature        String
+  status           PaymentStatus @default(PENDING)
+  createdAt        DateTime      @default(now()) @map("created_at")
+
+  order Order? @relation(fields: [orderId], references: [orderId], onDelete: Cascade)
+
+  @@index([orderId])
+  @@map("payment")
+}
+
+model Cart {
+  cartId     Int      @id @default(autoincrement()) @map("cart_id")
+  customerId Int      @unique @map("customer_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  customer  Customer   @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  cartItems CartItem[]
+
+  @@map("cart")
+}
+
+model CartItem {
+  cartId    Int      @map("cart_id")
+  productId Int      @map("product_id")
+  quantity  Int
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  cart    Cart    @relation(fields: [cartId], references: [cartId])
+  product Product @relation(fields: [productId], references: [productId])
+
+  @@id([cartId, productId])
+  @@index([productId])
+  @@map("cart_item")
+}
