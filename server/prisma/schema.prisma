@@ -30,7 +30,9 @@ model Customer {
   name         String
   emailAddress String   @unique @map("email_address")
   phoneNumber  String?  @map("phone_number") @db.Char(10)
-  passwordHash String   @map("password_hash")
+  passwordHash String?  @map("password_hash")
+  googleId     String?  @unique @map("google_id")
+  avatarUrl    String?  @map("avatar_url")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
