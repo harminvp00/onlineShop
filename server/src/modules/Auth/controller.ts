@@ -1,3 +1,5 @@
+
+
 import { Request, Response } from "express";
 import { registerValidation, loginValidation } from "./validations.js";
 import * as services from "./service.js";
@@ -178,4 +180,46 @@ export const getCurrentUser = async (req: Request, res: Response) => {
     success: true,
     user: authReq.user,
   });
+};
+
+export const updateProfile = async (req: Request, res: Response) => {
+  const authReq = req as AuthenticatedRequest;
+  const customerId = authReq.user?.id;
+
+  if (!customerId) {
+    return res.status(401).json({
+      success: false,
+      message: "Not authenticated",
+    });
+  }
+
+  try {
+    const { name, phoneNumber } = req.body;
+
+    if (!name) {
+      return res.status(400).json({
+        success: false,
+        message: "Name is required",
+      });
+    }
+
+    const updatedUser = await services.updateProfile(customerId, {
+      name,
+      phoneNumber: phoneNumber || null,
+    });
+
+    authReq.user = updatedUser as any;
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      user: updatedUser,
+    });
+  } catch (error: any) {
+    console.error("Update profile error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to update profile",
+    });
+  }
 };

@@ -124,3 +124,23 @@ export const findOrCreateGoogleUser = async (data: GoogleUserDto) => {
 
   return customer;
 };
+
+export const updateProfile = async (
+  customerId: number,
+  data: { name?: string; phoneNumber?: string | null }
+) => {
+  return prisma.customer.update({
+    where: { id: customerId },
+    data: {
+      name: data.name,
+      phoneNumber: data.phoneNumber,
+    },
+    select: {
+      id: true,
+      name: true,
+      emailAddress: true,
+      phoneNumber: true,
+      avatarUrl: true,
+    },
+  });
+};
